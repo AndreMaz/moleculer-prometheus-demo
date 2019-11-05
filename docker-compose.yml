@@ -1,11 +1,11 @@
 version: "3.2"
 
 services:
-
   api:
     build:
       context: .
     image: moleculer-prometheus-demo
+    hostname: api
     container_name: moleculer-prometheus-demo-api
     env_file: docker-compose.env
     environment:
@@ -14,7 +14,7 @@ services:
     depends_on:
       - nats
     ports:
-      - 9100:3030
+      - 9100:3030 ## Add a port in order to access the metrics
     labels:
       - "traefik.enable=true"
       - "traefik.backend=api"
@@ -23,13 +23,12 @@ services:
       - "traefik.frontend.rule=PathPrefix:/"
     networks:
       - internal
-    # volumes:
-    # - ./targets.json:/etc/prometheus/targets.json:ro
 
   greeter:
     build:
       context: .
     image: moleculer-prometheus-demo
+    hostname: greeter ## Define the hostname
     container_name: moleculer-prometheus-demo-greeter
     env_file: docker-compose.env
     environment:
@@ -39,11 +38,9 @@ services:
     depends_on:
       - nats
     ports:
-      - 9200:3030
+      - 9200:3030 ## Add a port in order to access the metrics
     networks:
       - internal
-    #volumes:
-    #  - ./targets.json:targets.json
 
   nats:
     image: nats
@@ -87,7 +84,6 @@ services:
       - ./targets.json:/etc/prometheus/targets.json:ro
     networks:
       - internal
-      - default
 
 networks:
   internal:

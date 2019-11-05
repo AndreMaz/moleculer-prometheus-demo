@@ -1,18 +1,14 @@
 [
-    {
-        "labels": {
-            "job": "api"
-        },
-        "targets": [
-            "localhost:9100"
-        ]
+  {
+    "labels": {
+      "job": "api"
     },
-    {
-        "labels": {
-            "job": "greeter"
-        },
-        "targets": [
-            "localhost:9200"
-        ]
-    }
+    "targets": ["api:3030"]
+  },
+  {
+    "labels": {
+      "job": "greeter"
+    },
+    "targets": ["greeter:3030"]
+  }
 ]

@@ -1,17 +1,124 @@
-[![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)](https://moleculer.services)
+# moleculer-prometheus-demo [![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)](https://moleculer.services)
 
+This is a demo repo showing how to use Prometheus [File-based Service Discovery](https://prometheus.io/docs/guides/file-sd/) to dynamically find and scrap metrics from Moleculer services.
 
-# Docker File
-**Check the Dockerfile. Add to docs the python, make, gcc reference.**
+> This demo is based on [moleculer-demo](https://moleculer.services/docs/0.13/usage.html#Create-a-Moleculer-project)
 
-# moleculer-prometheus-demo
+## ToDo:
 
-## NPM scripts
+- [ ] Share via Docker's volumes `target.json` with Moleculer services
+- [ ] Create a script that will update `target.json` every time new Moleculer node is connected
+- [ ] Moleculer v0.14 needs `python` and `gcc` to install [`event-loop-stats`](https://github.com/bripkens/event-loop-stats). Adding `RUN apk add --no-cache python3 make g++` to Dockerfile produces multiple warning. Need to investigate what's happening
 
-- `npm run dev`: Start development mode (load all services locally with hot-reload & REPL)
-- `npm run start`: Start production mode (set `SERVICES` env variable to load certain services)
-- `npm run cli`: Start a CLI and connect to production. Don't forget to set production namespace with `--ns` argument in script
-- `npm run ci`: Run continuous test mode with watching
-- `npm test`: Run tests & generate coverage report
-- `npm run dc:up`: Start the stack with Docker Compose
-- `npm run dc:down`: Stop the stack with Docker Compose
+## Example
+
+Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:9090/targets). You should get something like:
+![image](media/prometheus.png)
+
+### Useful Links
+
+- [http://localhost:3000/](http://localhost:3000/) - Make a call to [API Gateway](https://moleculer.services/docs/0.14/moleculer-web.html)
+- [http://localhost:3001/dashboard/](http://localhost:3001/dashboard/) - Call [Traefik](https://traefik.io/)
+- [http://localhost:9090/graph](http://localhost:9090/graph) - Call Prometheus server
+- [http://localhost:9100/metrics](http://localhost:9100/metrics) - Check `api` service metrics
+- [http://localhost:9200/metrics](http://localhost:9100/metrics) - Check `greeter` service metrics
+
+## Guide
+
+1. Create a container for the `greeter` service. Define it's `hostname` and (optionally) a `port` allowing to read its metrics
+
+```yml
+greeter:
+  build:
+    context: .
+  image: moleculer-prometheus-demo
+  hostname: greeter ## Define the hostname. It will be used to inform Prometheus
+  container_name: moleculer-prometheus-demo-greeter
+  env_file: docker-compose.env
+  environment:
+    SERVICES: greeter
+  labels:
+    - "traefik.enable=false"
+  depends_on:
+    - nats
+  ports:
+    - 9200:3030 ## Add a port in order to access the metrics
+  networks:
+    - internal
+```
+
+2. Create container for Prometheus. Add volumes for `prometheus.yml` and `targets.json`
+
+**docker-compose.yml**
+
+```yaml
+prometheus:
+  image: prom/prometheus:latest
+  container_name: prometheus
+  ports:
+    - 9090:9090
+  command:
+    - --config.file=/etc/prometheus/prometheus.yml
+  volumes:
+    ## Custom Prometheus configuration file
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ## Target file
+    - ./targets.json:/etc/prometheus/targets.json:ro
+  networks:
+    - internal
+```
+
+3. Create a configuration file `prometheus.yml` for Prometheus
+
+**prometheus.yml**
+
+```yml
+## General configs
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+      scheme: http
+      timeout: 10s
+      api_version: v1
+scrape_configs:
+  - job_name: prometheus
+    honor_timestamps: true
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets:
+          - localhost:9090
+  ## Add a job for Moleculer services
+  - job_name: "moleculer"
+    scheme: http
+    file_sd_configs:
+      - files:
+          - "targets.json" ## The actual targets will be specified in target.json file
+        refresh_interval: 10s
+```
+
+4. Create `targets.file` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
+
+```js
+[
+  {
+    labels: {
+      job: "api"
+    },
+    targets: ["api:3030"] // "api" is the hostname that we've defined in docker-compose.yml
+  },
+  {
+    labels: {
+      job: "greeter"
+    },
+    targets: ["greeter:3030"] // "greeter" is the hostname that we've defined in docker-compose.yml
+  }
+];
+```
