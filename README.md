@@ -25,7 +25,7 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
 
 ## Guide
 
-1. Open `moleculer.config.js` enable metrics and set Prometheus as exporter
+1. Open `moleculer.config.js`, enable metrics and set Prometheus as a reporter. [More info](https://moleculer.services/docs/0.14/metrics.html#Prometheus)
 
    **moleculer.config.js**
 
@@ -135,7 +135,7 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
            refresh_interval: 10s
    ```
 
-5. Create `targets.json` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
+5. Create `targets.json` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config). Prometheus watches the `targets.json` file and will track any target that's present in `targets.json`. In this case, Prometheus will try to read from http://api:3030/metrics and http://greeter:3030/metrics
 
    **targets.json**
 
