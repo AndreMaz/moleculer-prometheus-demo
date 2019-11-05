@@ -12,7 +12,7 @@ Should we leave dynamic Service Discovery to DevOps or try to automate things on
 - [ ] Create a script that will update `target.json` every time new Moleculer node is connected. We can use Moleculer's registry to track new nodes.
 - [ ] **Bonus:** Moleculer v0.14 needs `python` and `gcc` to install [`event-loop-stats`](https://github.com/bripkens/event-loop-stats). Adding `RUN apk add --no-cache python3 make g++` to Dockerfile produces multiple warnings (see an [example](media/warnings.png)). Need to investigate what's happening.
 
-However, this approach wouldn't work if services are scattered across multiple servers because it would not be possible to possible to share `target.json`.
+However, this approach wouldn't work if services are scattered across multiple servers because it would not be possible to share `target.json`.
 
 > Any suggestions and improvements are welcome!
 
@@ -60,7 +60,7 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
    }
    ```
 
-2. Create a container for the `greeter` service. Define a `hostname` for it and (optionally) a `port` allowing to read its metrics.
+2. Create a container for the `greeter` service. Define a `hostname` for it and (optionally) a `port` allowing to read its metrics. Repeat the same steps for `api` service.
 
    **docker-compose.yml**
 
@@ -141,7 +141,7 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
            refresh_interval: 10s
    ```
 
-5. Create `targets.json` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config). Prometheus watches the `targets.json` file and will track any target that's present in `targets.json`. In this case, Prometheus will try to read from http://api:3030/metrics and http://greeter:3030/metrics
+5. Create `targets.json` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config). Prometheus watches the `targets.json` file and will track any target that's present in it. In this case, Prometheus will try to read metrics from http://api:3030/metrics and http://greeter:3030/metrics
 
    **targets.json**
 
