@@ -27,131 +27,133 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
 
 1. Open `moleculer.config.js` enable metrics and set Prometheus as exporter
 
-**moleculer.config.js**
+   **moleculer.config.js**
 
-```js
-{
-  // Other configs
-	metrics: {
-        enabled: true,
-        reporter: [
-            {
-                type: "Prometheus",
-                options: {
-                    // HTTP port
-                    port: 3030,
-                    // HTTP URL path
-                    path: "/metrics",
-                    // Default labels which are appended to all metrics labels
-                    defaultLabels: registry => ({
-                        namespace: registry.broker.namespace,
-                        nodeID: registry.broker.nodeID
-                    })
-                }
-            }
-        ]
-    }
-}
-```
+   ```js
+   {
+     // Other configs
+     metrics: {
+           enabled: true,
+           reporter: [
+               {
+                   type: "Prometheus",
+                   options: {
+                       // HTTP port
+                       port: 3030,
+                       // HTTP URL path
+                       path: "/metrics",
+                       // Default labels which are appended to all metrics labels
+                       defaultLabels: registry => ({
+                           namespace: registry.broker.namespace,
+                           nodeID: registry.broker.nodeID
+                       })
+                   }
+               }
+           ]
+       }
+   }
+   ```
 
 2. Create a container for the `greeter` service. Define a `hostname` for it and (optionally) a `port` allowing to read its metrics.
 
-**docker-compose.yml**
+   **docker-compose.yml**
 
-```yml
-greeter:
-  build:
-    context: .
-  image: moleculer-prometheus-demo
-  hostname: greeter ## Define the hostname. It will be used to inform Prometheus
-  container_name: moleculer-prometheus-demo-greeter
-  env_file: docker-compose.env
-  environment:
-    SERVICES: greeter
-  labels:
-    - "traefik.enable=false"
-  depends_on:
-    - nats
-  ports:
-    - 9200:3030 ## Add a port in order to access the metrics
-  networks:
-    - internal
-```
+   ```yml
+   greeter:
+     build:
+       context: .
+     image: moleculer-prometheus-demo
+     hostname: greeter ## Define the hostname. It will be used to inform Prometheus
+     container_name: moleculer-prometheus-demo-greeter
+     env_file: docker-compose.env
+     environment:
+       SERVICES: greeter
+     labels:
+       - "traefik.enable=false"
+     depends_on:
+       - nats
+     ports:
+       - 9200:3030 ## Add a port in order to access the metrics
+     networks:
+       - internal
+   ```
 
 3. Create a container for [Prometheus](https://prometheus.io/). Add volumes for `prometheus.yml` and `targets.json`
 
-**docker-compose.yml**
+   **docker-compose.yml**
 
-```yaml
-prometheus:
-  image: prom/prometheus:latest
-  container_name: prometheus
-  ports:
-    - 9090:9090
-  command:
-    - --config.file=/etc/prometheus/prometheus.yml
-  volumes:
-    ## Custom Prometheus configuration file
-    - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    ## Target file
-    - ./targets.json:/etc/prometheus/targets.json:ro
-  networks:
-    - internal
-```
+   ```yaml
+   prometheus:
+     image: prom/prometheus:latest
+     container_name: prometheus
+     ports:
+       - 9090:9090
+     command:
+       - --config.file=/etc/prometheus/prometheus.yml
+     volumes:
+       ## Custom Prometheus configuration file
+       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+       ## Target file
+       - ./targets.json:/etc/prometheus/targets.json:ro
+     networks:
+       - internal
+   ```
 
 4. Create a configuration file `prometheus.yml` for Prometheus
 
-**prometheus.yml**
+   **prometheus.yml**
 
-```yml
-## General configs
-global:
-  scrape_interval: 15s
-  scrape_timeout: 10s
-  evaluation_interval: 15s
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets: []
-      scheme: http
-      timeout: 10s
-      api_version: v1
-scrape_configs:
-  - job_name: prometheus
-    honor_timestamps: true
-    scrape_interval: 15s
-    scrape_timeout: 10s
-    metrics_path: /metrics
-    scheme: http
-    static_configs:
-      - targets:
-          - localhost:9090
-  ## Add a job for Moleculer services
-  - job_name: "moleculer"
-    scheme: http
-    file_sd_configs:
-      - files:
-          - "targets.json" ## The actual targets will be specified in target.json file
-        refresh_interval: 10s
-```
+   ```yml
+   ## General configs
+   global:
+     scrape_interval: 15s
+     scrape_timeout: 10s
+     evaluation_interval: 15s
+   alerting:
+     alertmanagers:
+       - static_configs:
+           - targets: []
+         scheme: http
+         timeout: 10s
+         api_version: v1
+   scrape_configs:
+     - job_name: prometheus
+       honor_timestamps: true
+       scrape_interval: 15s
+       scrape_timeout: 10s
+       metrics_path: /metrics
+       scheme: http
+       static_configs:
+         - targets:
+             - localhost:9090
+     ## Add a job for Moleculer services
+     - job_name: "moleculer"
+       scheme: http
+       file_sd_configs:
+         - files:
+             - "targets.json" ## The actual targets will be specified in target.json file
+           refresh_interval: 10s
+   ```
 
-5. Create `targets.file` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
+5. Create `targets.json` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
 
-```js
-[
-  {
-    labels: {
-      job: "api"
-    },
-    targets: ["api:3030"] // "api" is the hostname that we've defined in docker-compose.yml
-  },
-  {
-    labels: {
-      job: "greeter"
-    },
-    targets: ["greeter:3030"] // "greeter" is the hostname that we've defined in docker-compose.yml
-  }
-];
-```
+   **targets.json**
+
+   ```js
+   [
+     {
+       labels: {
+         job: "api"
+       },
+       targets: ["api:3030"] // "api" is the hostname that we've defined in docker-compose.yml
+     },
+     {
+       labels: {
+         job: "greeter"
+       },
+       targets: ["greeter:3030"] // "greeter" is the hostname that we've defined in docker-compose.yml
+     }
+   ];
+   ```
 
 6. Run `npm run dc:up`
