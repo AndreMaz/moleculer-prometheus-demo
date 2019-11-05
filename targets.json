@@ -1,0 +1,18 @@
+[
+    {
+        "labels": {
+            "job": "api"
+        },
+        "targets": [
+            "localhost:9100"
+        ]
+    },
+    {
+        "labels": {
+            "job": "greeter"
+        },
+        "targets": [
+            "localhost:9200"
+        ]
+    }
+]

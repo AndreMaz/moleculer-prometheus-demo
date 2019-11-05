@@ -1,5 +1,9 @@
 [![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)](https://moleculer.services)
 
+
+# Docker File
+**Check the Dockerfile. Add to docs the python, make, gcc reference.**
+
 # moleculer-prometheus-demo
 
 ## NPM scripts

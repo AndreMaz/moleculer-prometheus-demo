@@ -153,7 +153,7 @@ module.exports = {
 
 	// Called after broker created.
 	created(broker) {
-		
+
 	},
 
 	// Called after broker started.
@@ -163,7 +163,7 @@ module.exports = {
 
 	// Called after broker stopped.
 	stopped(broker) {
-
+		
 	},
 
 	// Register custom REPL commands.

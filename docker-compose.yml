@@ -13,6 +13,8 @@ services:
       PORT: 3000
     depends_on:
       - nats
+    ports:
+      - 9100:3030
     labels:
       - "traefik.enable=true"
       - "traefik.backend=api"
@@ -21,6 +23,8 @@ services:
       - "traefik.frontend.rule=PathPrefix:/"
     networks:
       - internal
+    # volumes:
+    # - ./targets.json:/etc/prometheus/targets.json:ro
 
   greeter:
     build:
@@ -34,8 +38,12 @@ services:
       - "traefik.enable=false"
     depends_on:
       - nats
+    ports:
+      - 9200:3030
     networks:
       - internal
+    #volumes:
+    #  - ./targets.json:targets.json
 
   nats:
     image: nats
@@ -61,6 +69,22 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /dev/null:/traefik.toml
+    networks:
+      - internal
+      - default
+
+  # From: https://prometheus.io/docs/guides/cadvisor/#docker-compose-configuration
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      ## Target file
+      - ./targets.json:/etc/prometheus/targets.json:ro
     networks:
       - internal
       - default
