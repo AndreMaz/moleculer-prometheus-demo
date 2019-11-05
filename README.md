@@ -4,11 +4,17 @@ This is a demo repo showing how to use Prometheus [File-based Service Discovery]
 
 > This demo is based on [moleculer-demo](https://moleculer.services/docs/0.13/usage.html#Create-a-Moleculer-project)
 
-## ToDo:
+## Questions and Issues:
+
+Should we leave dynamic Service Discovery to DevOps or try to automate things on Moleculer side? We could potentially:
 
 - [ ] Share via Docker's volumes `target.json` with Moleculer services.
-- [ ] Create a script that will update `target.json` every time new Moleculer node is connected.
+- [ ] Create a script that will update `target.json` every time new Moleculer node is connected. We can use Moleculer's registry to track new nodes.
 - [ ] **Bonus:** Moleculer v0.14 needs `python` and `gcc` to install [`event-loop-stats`](https://github.com/bripkens/event-loop-stats). Adding `RUN apk add --no-cache python3 make g++` to Dockerfile produces multiple warnings (see an [example](media/warnings.png)). Need to investigate what's happening.
+
+However, this approach wouldn't work if services are scattered across multiple servers because it would not be possible to possible to share `target.json`.
+
+> Any suggestions and improvements are welcome!
 
 ## Example
 
