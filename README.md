@@ -6,9 +6,9 @@ This is a demo repo showing how to use Prometheus [File-based Service Discovery]
 
 ## ToDo:
 
-- [ ] Share via Docker's volumes `target.json` with Moleculer services
-- [ ] Create a script that will update `target.json` every time new Moleculer node is connected
-- [ ] Moleculer v0.14 needs `python` and `gcc` to install [`event-loop-stats`](https://github.com/bripkens/event-loop-stats). Adding `RUN apk add --no-cache python3 make g++` to Dockerfile produces multiple warning. Need to investigate what's happening
+- [ ] Share via Docker's volumes `target.json` with Moleculer services.
+- [ ] Create a script that will update `target.json` every time new Moleculer node is connected.
+- [ ] Moleculer v0.14 needs `python` and `gcc` to install [`event-loop-stats`](https://github.com/bripkens/event-loop-stats). Adding `RUN apk add --no-cache python3 make g++` to Dockerfile produces multiple warnings (see the [example](media/warnings.png). Need to investigate what's happening.
 
 ## Example
 
@@ -25,7 +25,7 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
 
 ## Guide
 
-1. Create a container for the `greeter` service. Define it's `hostname` and (optionally) a `port` allowing to read its metrics
+1. Create a container for the `greeter` service. Define a `hostname` for it and (optionally) a `port` allowing to read its metrics.
 
 ```yml
 greeter:
@@ -47,7 +47,7 @@ greeter:
     - internal
 ```
 
-2. Create container for Prometheus. Add volumes for `prometheus.yml` and `targets.json`
+2. Create a container for [Prometheus](https://prometheus.io/). Add volumes for `prometheus.yml` and `targets.json`
 
 **docker-compose.yml**
 
