@@ -122,3 +122,5 @@ scrape_configs:
   }
 ];
 ```
+
+5. Run `npm run dc:up`
