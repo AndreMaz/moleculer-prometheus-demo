@@ -25,7 +25,38 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
 
 ## Guide
 
-1. Create a container for the `greeter` service. Define a `hostname` for it and (optionally) a `port` allowing to read its metrics.
+1. Open `moleculer.config.js` enable metrics and set Prometheus as exporter
+
+**moleculer.config.js**
+
+```js
+{
+  // Other configs
+	metrics: {
+        enabled: true,
+        reporter: [
+            {
+                type: "Prometheus",
+                options: {
+                    // HTTP port
+                    port: 3030,
+                    // HTTP URL path
+                    path: "/metrics",
+                    // Default labels which are appended to all metrics labels
+                    defaultLabels: registry => ({
+                        namespace: registry.broker.namespace,
+                        nodeID: registry.broker.nodeID
+                    })
+                }
+            }
+        ]
+    }
+}
+```
+
+2. Create a container for the `greeter` service. Define a `hostname` for it and (optionally) a `port` allowing to read its metrics.
+
+**docker-compose.yml**
 
 ```yml
 greeter:
@@ -47,7 +78,7 @@ greeter:
     - internal
 ```
 
-2. Create a container for [Prometheus](https://prometheus.io/). Add volumes for `prometheus.yml` and `targets.json`
+3. Create a container for [Prometheus](https://prometheus.io/). Add volumes for `prometheus.yml` and `targets.json`
 
 **docker-compose.yml**
 
@@ -68,7 +99,7 @@ prometheus:
     - internal
 ```
 
-3. Create a configuration file `prometheus.yml` for Prometheus
+4. Create a configuration file `prometheus.yml` for Prometheus
 
 **prometheus.yml**
 
@@ -104,7 +135,7 @@ scrape_configs:
         refresh_interval: 10s
 ```
 
-4. Create `targets.file` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
+5. Create `targets.file` and specify the targets that Prometheus should track and scrap metrics from. [More info](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
 
 ```js
 [
@@ -123,4 +154,4 @@ scrape_configs:
 ];
 ```
 
-5. Run `npm run dc:up`
+6. Run `npm run dc:up`
