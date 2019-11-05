@@ -8,7 +8,7 @@ This is a demo repo showing how to use Prometheus [File-based Service Discovery]
 
 - [ ] Share via Docker's volumes `target.json` with Moleculer services.
 - [ ] Create a script that will update `target.json` every time new Moleculer node is connected.
-- [ ] Moleculer v0.14 needs `python` and `gcc` to install [`event-loop-stats`](https://github.com/bripkens/event-loop-stats). Adding `RUN apk add --no-cache python3 make g++` to Dockerfile produces multiple warnings (see an [example](media/warnings.png)). Need to investigate what's happening.
+- [ ] **Bonus:** Moleculer v0.14 needs `python` and `gcc` to install [`event-loop-stats`](https://github.com/bripkens/event-loop-stats). Adding `RUN apk add --no-cache python3 make g++` to Dockerfile produces multiple warnings (see an [example](media/warnings.png)). Need to investigate what's happening.
 
 ## Example
 
