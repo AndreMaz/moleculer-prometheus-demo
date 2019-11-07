@@ -5,7 +5,7 @@ services:
     build:
       context: .
     image: moleculer-prometheus-demo
-    hostname: api
+    hostname: api ## (Optional) Define the hostname
     container_name: moleculer-prometheus-demo-api
     env_file: docker-compose.env
     environment:
@@ -28,7 +28,7 @@ services:
     build:
       context: .
     image: moleculer-prometheus-demo
-    hostname: greeter ## Define the hostname
+    hostname: greeter ## (Optional) Define the hostname
     container_name: moleculer-prometheus-demo-greeter
     env_file: docker-compose.env
     environment:
@@ -41,6 +41,9 @@ services:
       - 9200:3030 ## Add a port in order to access the metrics
     networks:
       - internal
+    volumes:
+      ## Target file
+      - ./targets.json:/moleculer-discovery/targets.json ## Mount `targets.json` to a specific dir.
 
   nats:
     image: nats
