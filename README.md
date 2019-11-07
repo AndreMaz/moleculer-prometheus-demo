@@ -6,7 +6,7 @@ This is a PoC repo showing how to use Prometheus [File-based Service Discovery](
 
 ### The Idea
 
-Moleculer Services have build-in registry that handles the discovery of new nodes. This repo shows how to use this feature to add on-the-fly new targets to Prometheus.
+Moleculer Services have [built-in registry mechanism](https://moleculer.services/docs/0.14/registry.html) that handles the discovery of new nodes. This repo shows how to use this feature to add on-the-fly new targets to Prometheus.
 
 **Overview**
 ![image](media/overview.png)
