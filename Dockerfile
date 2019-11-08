@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-## In v0.14 Python is needed to build event-loop-stats
+## Moleculer v0.14 needs Python to build event-loop-stats
 RUN apk add --no-cache python3 make g++
 
 RUN npm install --production

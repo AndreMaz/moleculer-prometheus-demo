@@ -2,6 +2,8 @@ const { ServiceBroker } = require("moleculer");
 const fs = require("fs").promises;
 const path = require("path");
 const { MoleculerError } = require("moleculer").Errors;
+const { BrokerNode } = require("moleculer");
+const kleur = require("kleur");
 
 /**
  * Node discovery middleware
@@ -26,13 +28,13 @@ async function created(broker) {
       `Broker@${broker.nodeID} found the Prometheus' target file`
     );
 
-    // Target file found so we're going to register targetsHandlers
-    broker.localBus.on("$node.connected", () =>
-      regenerateTargets(broker, pathToTarget, "connected")
+    // Register targetsHandlers
+    broker.localBus.on("$node.connected", ({ node }) =>
+      regenerateTargets(broker, node, pathToTarget, "connected")
     );
 
-    broker.localBus.on("$node.disconnected", () =>
-      regenerateTargets(broker, pathToTarget, "disconnected")
+    broker.localBus.on("$node.disconnected", ({ node }) =>
+      regenerateTargets(broker, node, pathToTarget, "disconnected")
     );
   } catch (error) {
     broker.logger.warn(
@@ -44,12 +46,15 @@ async function created(broker) {
 /**
  * Generates an updated target list
  * @param {ServiceBroker} broker
+ * @param {BrokerNode} node
  * @param {string} pathToTarget
  * @param {string} eventType
  */
-async function regenerateTargets(broker, pathToTarget, eventType) {
+async function regenerateTargets(broker, node, pathToTarget, eventType) {
   broker.logger.info(
-    `Node ${eventType}. Regenerating target file for Prometheus`
+    `Node "${kleur.green(
+      node.id
+    )}" ${eventType}. Regenerating target file for Prometheus`
   );
 
   // Get new node List
