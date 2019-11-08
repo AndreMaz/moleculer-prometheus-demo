@@ -133,11 +133,11 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
        scheme: http
        file_sd_configs:
          - files:
-             - "targets.json" ## File where targets will be placed and read.
+             - "targets.json" ## File where greeter service will place targets and Prometheus will read.
            refresh_interval: 10s
    ```
 
-6. Open `docker-compose.env` and specify the the location where `prometheus` folder is mounted and the name of the targe file.
+6. Open `docker-compose.env` and specify the location where `prometheus` folder is mounted and the name of the targe file.
 
    **docker-compose.env**
 
@@ -186,4 +186,4 @@ Errors such as
 prometheus | level=error ts=2019-11-08T10:24:45.830Z caller=file.go:323 component="discovery manager scrape" discovery=file msg="Error reading file" path=/etc/prometheus/targets.json err="unexpected end of JSON input"
 ```
 
-might happen if Prometheus tries to read the file at the same time that `greeter` service is writing new targets. However, it's not a big issue as Prometheus read this file periodically, so next time it will read a valid target file.
+might happen if Prometheus tries to read the file at the same time that `greeter` service is writing new targets. However, it's not a big issue as Prometheus reads this file periodically, so next time it will read a valid target file.
