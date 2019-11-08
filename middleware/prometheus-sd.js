@@ -37,6 +37,8 @@ async function created(broker) {
       regenerateTargets(broker, node, pathToTarget, "disconnected")
     );
   } catch (error) {
+    // Silent error
+    // This middleware will be running at all nodes but only one will have access to the targets file
     broker.logger.warn(
       `Broker@${broker.nodeID} didn't found the Prometheus' target file`
     );
@@ -92,7 +94,7 @@ function targetGenerator(nodeList) {
 }
 
 /**
- * Create (if necessary) the targe file.
+ * Create (if necessary) the target file.
  * @param {string} pathToTarget
  */
 async function createTargetFile(pathToTarget) {
