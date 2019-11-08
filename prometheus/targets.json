@@ -7,14 +7,5 @@
     "targets": [
       "greeter:3030"
     ]
-  },
-  {
-    "labels": {
-      "job": "api",
-      "nodeID": "api-24"
-    },
-    "targets": [
-      "api:3030"
-    ]
   }
 ]

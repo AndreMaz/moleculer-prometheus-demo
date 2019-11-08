@@ -1,6 +1,6 @@
 # moleculer-prometheus-demo [![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)](https://moleculer.services)
 
-This is a PoC repo showing how to use Prometheus [File-based Service Discovery](https://prometheus.io/docs/guides/file-sd/) to dynamically find and scrap metrics from Moleculer services.
+This is a PoC showing how to use Prometheus [File-based Service Discovery](https://prometheus.io/docs/guides/file-sd/) to dynamically find and scrap metrics from Moleculer services.
 
 > This demo is based on [moleculer-demo](https://moleculer.services/docs/0.13/usage.html#Create-a-Moleculer-project)
 
