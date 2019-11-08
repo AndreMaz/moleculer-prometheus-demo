@@ -1,8 +1,10 @@
 const { ServiceBroker } = require("moleculer");
 const fs = require("fs").promises;
-const pathToFile = "../moleculer-discovery/targets.json";
+const path = require("path");
+const { MoleculerError } = require("moleculer").Errors;
 
 /**
+ * Node discovery middleware
  * @param {ServiceBroker} broker
  */
 async function created(broker) {
@@ -10,38 +12,44 @@ async function created(broker) {
     "Registering Service Discovery Middleware from Prometheus"
   );
 
-  broker.logger.info(`Broker "${broker.nodeID}" will look for target file`);
+  const pathToTarget = path.join(
+    "..",
+    process.env.TARGETDIR,
+    process.env.TARGETFILE
+  );
 
+  broker.logger.info(`Broker@${broker.nodeID} will look for target file`);
   try {
-    // Only register the targetGenerator if there is a target file
-    await fs.access(pathToFile);
-    hasTargetsFile = true;
+    await createTargetFile(pathToTarget);
+
     broker.logger.info(
-      `Broker: "${broker.nodeID}" found a Prometheus target file`
+      `Broker@${broker.nodeID} found the Prometheus' target file`
     );
 
+    // Target file found so we're going to register targetsHandlers
     broker.localBus.on("$node.connected", () =>
-      targetsHandler(broker, "connected")
+      regenerateTargets(broker, pathToTarget, "connected")
     );
 
     broker.localBus.on("$node.disconnected", () =>
-      targetsHandler(broker, "disconnected")
+      regenerateTargets(broker, pathToTarget, "disconnected")
     );
   } catch (error) {
     broker.logger.warn(
-      `Broker: "${broker.nodeID}" didn't found a Prometheus target file`
+      `Broker@${broker.nodeID} didn't found the Prometheus' target file`
     );
   }
 }
 
 /**
- *
+ * Generates an updated target list
  * @param {ServiceBroker} broker
+ * @param {string} pathToTarget
  * @param {string} eventType
  */
-async function targetsHandler(broker, eventType) {
+async function regenerateTargets(broker, pathToTarget, eventType) {
   broker.logger.info(
-    `Node ${eventType}. Generating new target file for Prometheus`
+    `Node ${eventType}. Regenerating target file for Prometheus`
   );
 
   // Get new node List
@@ -52,11 +60,11 @@ async function targetsHandler(broker, eventType) {
 
   // Write new targets to targets file
   try {
-    fs.writeFile(pathToFile, JSON.stringify(targets, null, 2));
+    await fs.writeFile(pathToTarget, JSON.stringify(targets, null, 2));
     broker.logger.info("Successfully updated Prometheus target file");
   } catch (error) {
-    broker.logger.error(
-      `Broker "${broker.nodeID}" couldn't write to Prometheus' target file`
+    broker.logger.warn(
+      `Broker@${broker.nodeID} couldn't write to Prometheus' target file`
     );
   }
 }
@@ -76,6 +84,24 @@ function targetGenerator(nodeList) {
 
     return t;
   });
+}
+
+/**
+ * Create (if necessary) the targe file.
+ * @param {string} pathToTarget
+ */
+async function createTargetFile(pathToTarget) {
+  try {
+    // Check if file exists
+    await fs.access(pathToTarget);
+  } catch (error) {
+    try {
+      // Try to create the targets file
+      await fs.writeFile(pathToTarget, JSON.stringify([], null, 2));
+    } catch (error) {
+      throw new MoleculerError(`Could not create target file`);
+    }
+  }
 }
 
 module.exports = created;

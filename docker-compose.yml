@@ -42,8 +42,25 @@ services:
     networks:
       - internal
     volumes:
-      ## Target file
-      - ./targets.json:/moleculer-discovery/targets.json ## Mount `targets.json` to a specific dir.
+      - ./prometheus:/etc/prometheus ## Share "prometheus" dir with greeter service
+
+  replica:
+    build:
+      context: .
+    image: moleculer-prometheus-demo
+    hostname: replica ## (Optional) Define the hostname
+    container_name: moleculer-prometheus-demo-replica
+    env_file: docker-compose.env
+    environment:
+      SERVICES: greeter
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - nats
+    ports:
+      - 9300:3030 ## Add a port in order to access the metrics
+    networks:
+      - internal
 
   nats:
     image: nats
@@ -82,9 +99,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      ## Target file
-      - ./targets.json:/etc/prometheus/targets.json:ro
+      - ./prometheus:/etc/prometheus:ro ## Share "prometheus" dir with Prometheus service
     networks:
       - internal
 

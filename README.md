@@ -55,7 +55,9 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
    }
    ```
 
-2. (Optional) Define a `hostname` for the `greeter` container and a `port` to expose its metrics. Repeat the same steps for `api` service.
+2. Create a `prometheus` folder at top dir.
+
+3. Mount `prometheus` folder for `greeter` service. (Optional) Define a `hostname` for the `greeter` container and a `port` to expose its metrics. Repeat the same steps for `api` service.
 
    **docker-compose.yml**
 
@@ -64,7 +66,7 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
      build:
        context: .
      image: moleculer-prometheus-demo
-     hostname: greeter ## Define the hostname. It will be used to inform Prometheus
+     hostname: greeter ## (Optional) Define the hostname
      container_name: moleculer-prometheus-demo-greeter
      env_file: docker-compose.env
      environment:
@@ -74,12 +76,14 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
      depends_on:
        - nats
      ports:
-       - 9200:3030 ## Add a port mapping
+       - 9200:3030 ## (Optional) Add a port in order to access the metrics
      networks:
        - internal
+     volumes:
+       - ./prometheus:/etc/prometheus ## mount "prometheus" dir. Greeter will write into this folder
    ```
 
-3. Create a container for [Prometheus](https://prometheus.io/). Add volumes for `prometheus.yml` and `targets.json`
+4. Create a container for [Prometheus](https://prometheus.io/). Mount `prometheus` folder.
 
    **docker-compose.yml**
 
@@ -90,17 +94,14 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
      ports:
        - 9090:9090
      command:
-       - --config.file=/etc/prometheus/prometheus.yml
+       - --config.file=/etc/prometheus/prometheus.yml # Set the configuration file
      volumes:
-       ## Custom Prometheus configuration file
-       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-       ## Target file
-       - ./targets.json:/etc/prometheus/targets.json:ro
+       - ./prometheus:/etc/prometheus:ro ## mount "prometheus" dir. Prometheus will read targets from here
      networks:
        - internal
    ```
 
-4. Create a configuration file `prometheus.yml` for Prometheus
+5. Create a configuration file `prometheus.yml` for Prometheus
 
    **prometheus.yml**
 
@@ -132,31 +133,57 @@ Run `npm run dc:up` and open [http://localhost:9090/targets](http://localhost:90
        scheme: http
        file_sd_configs:
          - files:
-             - "targets.json" ## The actual targets will be specified in target.json file
+             - "targets.json" ## File where targets will be placed and read.
            refresh_interval: 10s
    ```
 
-5. Create an empty `targets.json` that will be shared with containers that "hold" the `greeter` service and the Prometheus server.
+6. Open `docker-compose.env` and specify the the location where `prometheus` folder is mounted and the name of the targe file.
 
-6. Run `npm run dc:up`.
+   **docker-compose.env**
 
-7. Check the `targets.json`. It should contain 2 targets for Prometheus to track and scrap metrics.
+   ```bash
+   NAMESPACE=
+   LOGGER=true
+   LOGLEVEL=info
+   SERVICEDIR=services
 
-   **targets.json**
+   TRANSPORTER=nats://nats:4222
 
-   ```js
-   [
-     {
-       labels: {
-         job: "api"
-       },
-       targets: ["api:3030"] // "api" is the hostname that we've defined in docker-compose.yml
-     },
-     {
-       labels: {
-         job: "greeter"
-       },
-       targets: ["greeter:3030"] // "greeter" is the hostname that we've defined in docker-compose.yml
-     }
-   ];
+   ### Prometheus Targets File
+   TARGETDIR=etc/prometheus ## Dir where "prometheus" were mounted in Steps 3. and 4.
+   TARGETFILE=targets.json  ## File name that were specified in Step 5.
+
    ```
+
+7. Run `npm run dc:up`.
+
+8. Check the `targets.json`. It should contain 2 targets for Prometheus to track and scrap metrics.
+
+**targets.json**
+
+```js
+[
+  {
+    labels: {
+      job: "api"
+    },
+    targets: ["api:3030"] // "api" is the hostname that we've defined in docker-compose.yml
+  },
+  {
+    labels: {
+      job: "greeter"
+    },
+    targets: ["greeter:3030"] // "greeter" is the hostname that we've defined in docker-compose.yml
+  }
+];
+```
+
+### Note:
+
+Errors such as
+
+```bash
+prometheus | level=error ts=2019-11-08T10:24:45.830Z caller=file.go:323 component="discovery manager scrape" discovery=file msg="Error reading file" path=/etc/prometheus/targets.json err="unexpected end of JSON input"
+```
+
+might happen if Prometheus tries to read the file at the same time that `greeter` service is writing new targets. However, it's not a big issue as Prometheus read this file periodically, so next time it will read a valid target file.
