@@ -14,6 +14,11 @@ async function created(broker) {
     "Registering Service Discovery Middleware from Prometheus"
   );
 
+  if (!process.env.TARGETDIR || !process.env.TARGETFILE) {
+    broker.logger.error('No Prometheus target file is provided!')
+    return
+  }
+
   const pathToTarget = path.join(
     "..",
     process.env.TARGETDIR,
